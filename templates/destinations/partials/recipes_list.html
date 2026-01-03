@@ -1,0 +1,23 @@
+<div class="recipes-panel">
+    <header>
+        <h3>Recipes for {{ pin.region|default:pin.name }}</h3>
+        {% if pin.staple_dish %}
+            <p class="booking-meta">Featured dish: <strong class="staple-dish">{{ pin.staple_dish }}</strong></p>
+        {% endif %}
+    </header>
+
+    {% if recipes.exists %}
+        <ul class="region-recipes">
+            {% for recipe in recipes %}
+                <li>
+                    <a href="{% url 'recipe_detail' recipe.id %}" hx-get="{% url 'recipe_detail' recipe.id %}" hx-target="#recipe-details-container" hx-swap="innerHTML">{{ recipe.title }}</a>
+                    <p class="booking-meta">Week {{ recipe.week.week_number }}, Day {{ recipe.day }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="paynote">No linked recipes yet. You can add recipes to this region via the admin.</p>
+    {% endif %}
+
+    <button onclick="document.getElementById('recipes-sidepanel').classList.remove('open')" role="button">Close</button>
+</div>

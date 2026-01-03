@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/logo_animation.css' %}">
+{% endblock %}
+
+{% block content %}
+  <!-- Splash Screen Overlay -->
+  <div id="splash-overlay">
+      <div class="jj-logo-container">
+          <div class="jj-logo-text jj-jikoni">Jikoni</div>
+          <div class="jj-logo-text jj-journals">Journals</div>
+      </div>
+      <button id="welcome-btn" onclick="enterSite()">Welcome</button>
+      <!-- Sound Effect -->
+      <audio id="welcome-sound" src="{% static 'audio/welcome.mp3' %}" preload="auto"></audio>
+  </div>
+
+  <!-- Hero Image with Parallax Effect -->
+  <div class="hero-section">
+    <div class="hero-text">
+      <section class="hero-content-section">
+        <h2>Your culinary adventure starts here.</h2>
+        <p>An immersive guide to local culinary culture</p>
+
+        <div class="hero-sub-section">
+          <h3>Explore Meal Plans</h3>
+          <p>Discover curated meal plans that take you on a journey through the world's kitchens.</p>
+          <a href="{% url 'meal_plan_list' %}" role="button">View Plans</a>
+        </div>
+
+          <div class="jj-logo-container">
+    <div class="jj-logo-text jj-jikoni">Jikoni</div>
+    <div class="jj-logo-text jj-journals">Journals</div>
+        </div>
+    
+        <div class="hero-sub-section">
+          <h3>Book a Culinary Tour</h3>
+          <p>Join us for an unforgettable experience, guided by local experts.</p>
+          <a href="{% url 'booking_create' %}" role="button" class="secondary">Book Now</a>
+        </div>
+      </section>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function enterSite() {
+        // Play welcome sound
+        const audio = document.getElementById('welcome-sound');
+        if (audio) {
+            audio.play().catch(e => console.log("Audio play failed:", e));
+        }
+        document.getElementById('splash-overlay').classList.add('splash-hidden');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="content-box">
+        <h2>Contact Us</h2>
+        <p>Have a question or feedback? Let us know!</p>
+
+        {# This div is the target for the HTMX form submission swap #}
+        <div id="form-container">
+            <form hx-post="{% url 'contact' %}" hx-target="#form-container" hx-swap="outerHTML">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" role="button">Send Message</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

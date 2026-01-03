@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="content-box">
+        <h2>Book a Culinary Tour</h2>
+        <p>Secure your spot for an immersive culinary journey. Please fill out the details below.</p>
+
+        <div id="booking-form-container">
+            <form method="post" hx-post="{% url 'booking_create' %}" hx-swap="innerHTML" hx-target="#booking-form-container">
+            {% csrf_token %}
+            
+            {# If a Django Form is passed from the view, this renders it. #}
+            {# If not, the fallback HTML below demonstrates the required fields. #}
+            {% if form %}
+                {{ form.as_p }}
+            {% else %}
+                <div>
+                    <label for="id_name">Full Name:</label>
+                    <input type="text" name="name" id="id_name" required>
+                </div>
+                <div>
+                    <label for="id_email">Email Address:</label>
+                    <input type="email" name="email" id="id_email" required>
+                </div>
+                <div>
+                    <label for="id_tour_date">Preferred Tour Date:</label>
+                    <input type="date" name="tour_date" id="id_tour_date" required>
+                </div>
+                <div>
+                    <label for="id_guests">Number of Guests:</label>
+                    <input type="number" name="guests" id="id_guests" min="1" max="20" value="1" required>
+                </div>
+                <div>
+                    <label for="id_special_requirements">Special Requirements:</label>
+                    <textarea name="special_requirements" id="id_special_requirements" rows="4" placeholder="Dietary restrictions, accessibility needs, etc."></textarea>
+                </div>
+            {% endif %}
+
+            <button type="submit" role="button">Proceed to Booking</button>
+        </form>
+        </div>
+    </div>
+{% endblock %}

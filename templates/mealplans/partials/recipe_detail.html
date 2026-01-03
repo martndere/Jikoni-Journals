@@ -1,0 +1,70 @@
+<article class="recipe-detail">
+    <header class="recipe-header">
+        <h3>🍳 {{ recipe.title }}</h3>
+        <p class="recipe-meta">Week {{ recipe.week.week_number }} • Day {{ recipe.day }}</p>
+    </header>
+    
+    <section class="recipe-section">
+        <h4>📋 Ingredients</h4>
+        <div class="ingredients-content">
+            {{ recipe.ingredients|linebreaks }}
+        </div>
+    </section>
+    
+    <section class="recipe-section">
+        <h4>👨‍🍳 Method</h4>
+        <div class="method-content">
+            {{ recipe.method|linebreaks }}
+        </div>
+    </section>
+</article>
+
+<style>
+    .recipe-detail {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .recipe-header {
+        border-bottom: 2px solid #D75F02;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .recipe-header h3 {
+        color: #D75F02;
+        font-size: 1.6rem;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .recipe-meta {
+        color: #999;
+        font-size: 0.9rem;
+        margin: 0;
+        font-style: italic;
+    }
+
+    .recipe-section {
+        margin-bottom: 1.8rem;
+    }
+
+    .recipe-section h4 {
+        color: #66A61E;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .ingredients-content,
+    .method-content {
+        line-height: 1.8;
+        color: var(--text-color);
+        padding-left: 1rem;
+        border-left: 4px solid rgba(102, 166, 30, 0.3);
+    }
+
+    .ingredients-content p,
+    .method-content p {
+        margin: 0.6rem 0;
+    }
+</style>

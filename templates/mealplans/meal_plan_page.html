@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Video Background Overlay -->
+<video class="hero-background-video" autoplay muted loop playsinline>
+    <source src="{% static 'media/video/1.mp4' %}" type="video/mp4">
+</video>
+
+<div class="meal-plan-container">
+    <h2>30-Day Dinner Meal Plan</h2>
+    <p>Curated weekly menus inspired by global cuisines.</p>
+    
+    <!-- Explainer Popup/Toggle -->
+    <div class="meal-plan-explainer">
+        <button type="button" role="button" class="secondary" onclick="toggleExplainer()">
+            ℹ️ How do our Meal Plans work?
+        </button>
+        <div id="explainer-content" class="explainer-content">
+            <h3 style="color: var(--primary-color); margin-top: 0;">A Culinary Journey</h3>
+            <p style="color: var(--text-color); text-shadow: none;">
+                Each week, we curate a specific set of recipes from a different region of the world. 
+                <br><br>
+                <strong>1. Choose a Week:</strong> Browse the upcoming schedules below.<br>
+                <strong>2. Get the Ingredients:</strong> We provide a consolidated shopping list.<br>
+                <strong>3. Cook & Enjoy:</strong> Follow our step-by-step guides to master authentic dishes.
+            </p>
+            <button onclick="toggleExplainer()" style="background: #ccc; padding: 5px 10px; border:none; cursor:pointer;">Close</button>
+        </div>
+    </div>
+
+    <div class="meal-content">
+    {% for week in weeks %}
+    <section class="week-section">
+        <h3>Week {{ week.week_number }}</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Dinner</th>
+                    <th>Notes</th>
+                    <th style="width: 30px;"></th> <!-- Chevron Column -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for recipe in week.recipes.all %}
+                <tr class="recipe-trigger"
+                    hx-get="{% url 'recipe_detail' recipe.id %}" 
+                    hx-target="#recipe-content-{{ recipe.id }}" 
+                    hx-swap="innerHTML"
+                    onclick="toggleRecipeRow('{{ recipe.id }}')">
+                    <td>Day {{ recipe.day }}</td>
+                    <td>{{ recipe.title }}</td>
+                    <td>{{ recipe.notes|default_if_none:"—" }}</td>
+                    <td style="text-align: center;">
+                        <span id="chevron-{{ recipe.id }}" class="chevron-icon">▼</span>
+                    </td>
+                </tr>
+                <tr id="recipe-row-{{ recipe.id }}" class="recipe-detail-row" style="display: none;">
+                    <td colspan="4" style="padding: 0; border: none;">
+                        <div class="recipe-dropdown-content" style="position: relative;">
+                            <div style="position: absolute; top: 10px; right: 15px;">
+                                <button onclick="printRecipe('recipe-content-{{ recipe.id }}')" class="action-btn" title="Print Recipe">🖨️</button>
+                                <button onclick="toggleRecipeRow('{{ recipe.id }}')" class="action-btn" title="Close">✖</button>
+                            </div>
+                            <div id="recipe-content-{{ recipe.id }}">
+                                <div style="padding: 1rem; text-align: center; color: #666;">Loading recipe details...</div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endfor %}
+    </div> {# .meal-content #}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function toggleExplainer() {
+        const content = document.getElementById('explainer-content');
+        if (content.style.display === 'block') {
+            content.style.display = 'none';
+        } else {
+            content.style.display = 'block';
+        }
+    }
+
+    function toggleRecipeRow(id) {
+        const row = document.getElementById('recipe-row-' + id);
+        const chevron = document.getElementById('chevron-' + id);
+        
+        // Toggle visibility
+        if (row.style.display === 'none' || row.style.display === '') {
+            row.style.display = 'table-row';
+            if(chevron) chevron.classList.add('rotate');
+        } else {
+            row.style.display = 'none';
+            if(chevron) chevron.classList.remove('rotate');
+        }
+    }
+
+    function printRecipe(contentId) {
+        const content = document.getElementById(contentId).innerHTML;
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Print Recipe - Jikoni Journals</title>');
+        printWindow.document.write('<style>body{font-family: sans-serif; padding: 2rem; color: #333; line-height: 1.6;} h2,h3{color: #228B22;} .hero-background-video{display:none;}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(content);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+</script>
+{% endblock %}

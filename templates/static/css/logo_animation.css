@@ -1,0 +1,85 @@
+/* Jikoni Journals Logo Animation */
+
+/* Full Screen Splash Overlay */
+#splash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff; /* Clean background */
+    z-index: 10000; /* Ensures it sits on top of everything */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease-out, visibility 0.8s;
+}
+
+/* Class to hide the splash screen */
+.splash-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.jj-logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    overflow: hidden; /* Ensures sliding elements don't overflow during animation */
+}
+
+.jj-logo-text {
+    font-size: 4rem; /* Adjust based on your design */
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1.1;
+    opacity: 0; /* Start hidden */
+    position: relative;
+}
+
+.jj-jikoni {
+    color: #2E8B57; /* SeaGreen */
+    animation: slideDownReveal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.jj-journals {
+    color: #FFD700; /* Gold/Yellow */
+    animation: slideUpReveal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation-delay: 0.2s; /* Slight delay for the second word */
+}
+
+/* Animation Keyframes */
+@keyframes slideDownReveal {
+    from { opacity: 0; transform: translateY(-100%); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUpReveal {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Welcome Button Styling */
+#welcome-btn {
+    margin-top: 40px;
+    padding: 15px 50px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #2E8B57; /* Matches Jikoni Green */
+    border: 2px solid #2E8B57;
+    border-radius: 50px;
+    cursor: pointer;
+    opacity: 0;
+    animation: slideUpReveal 1s ease-out 1.5s forwards; /* Delays button appearance */
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+#welcome-btn:hover {
+    background-color: #246b43;
+    transform: scale(1.05);
+}

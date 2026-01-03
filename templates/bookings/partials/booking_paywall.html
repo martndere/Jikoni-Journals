@@ -1,0 +1,30 @@
+{% load booking_extras %}
+<div class="content-box" style="text-align: center; border: 2px solid var(--secondary-color);">
+    <h3 style="color: var(--primary-color);">Payment Required</h3>
+    <p>
+        For groups of <strong>{{ booking.guests }}</strong> or more, we require an upfront deposit.
+    </p>
+    <div style="font-size: 1.5rem; font-weight: bold; margin: 1rem 0;">
+        Total: {{ booking.amount_due|currency:"$" }}
+    </div>
+    
+    <!-- Stripe Option -->
+    <form action="{% url 'booking_checkout' booking.id %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" role="button">Pay with Card (Stripe)</button>
+    </form>
+
+    <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #ddd;">
+
+    <!-- M-Pesa Option -->
+    <form id="mpesa-form" hx-post="{% url 'mpesa_pay' booking.id %}" hx-swap="none" onsubmit="alert('Check your phone for the M-Pesa PIN prompt!')">
+        {% csrf_token %}
+        <label for="mpesa-phone" style="display:block; margin-bottom:0.5rem;">Pay with M-Pesa:</label>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <input type="text" name="phone_number" id="mpesa-phone" placeholder="0712345678" required style="max-width: 200px;">
+            <button type="submit" role="button" class="secondary" style="margin-top:0;">Pay</button>
+        </div>
+    </form>
+    
+    <p class="paynote">Secure payment processed by Stripe & M-Pesa.</p>
+</div>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="meal-plan-container">
+        <h2>Book a Culinary Tour or Experience</h2>
+        <p>Select your desired destination and date, and we'll get back to you to confirm.</p>
+
+        {# This div is the target for the HTMX form submission swap #}
+        <div id="booking-form-container">
+            <form hx-post="{% url 'booking_create' %}" hx-target="#booking-form-container" hx-swap="outerHTML">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" role="button">Submit Booking Request</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

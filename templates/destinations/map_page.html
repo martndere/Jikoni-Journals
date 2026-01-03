@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <!-- Video Background Overlay -->
+    <video class="hero-background-video" autoplay muted loop playsinline>
+        <source src="{% static 'media/video/1.mp4' %}" type="video/mp4">
+    </video>
+
+    <div class="meal-plan-container">
+        <h2>Explore Our Destinations</h2>
+        <p>Discover the best culinary spots and tourist experiences.</p>
+
+        <div class="map-layout">
+            {# Left sidebar with destinations list #}
+            <aside class="destinations-sidebar">
+                <h3>📍 Destinations</h3>
+                <ul id="destinations-list" class="destinations-list">
+                    <!-- HTMX will populate this with markers -->
+                </ul>
+            </aside>
+
+            {# Center map container #}
+            <div class="map-wrapper">
+                <div id="map"></div>
+            </div>
+
+            {# Right side recipes panel (populated via HTMX) #}
+            <aside id="recipes-sidepanel" class="recipes-sidepanel" aria-hidden="true">
+                <div id="recipes-sidepanel-inner">
+                    <div id="recipes-sidepanel-content">
+                        <!-- HTMX will load recipes partial here -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        {# Modal alternative for small screens or preference #}
+        <div id="recipes-modal" class="recipes-modal" aria-hidden="true">
+            <div class="recipes-modal-inner">
+                <div id="recipes-modal-content"></div>
+                <button id="recipes-modal-close" role="button">Close</button>
+            </div>
+        </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🗺️ Map initialization started');
+            
+            // Check if map container exists
+            const mapContainer = document.getElementById('map');
+            console.log('Map container:', mapContainer);
+            
+            // Initialize the map with a wide starting view
+            const map = L.map('map').setView([-1.286389, 36.817223], 8);
+            console.log('Leaflet map initialized:', map);
+
+            // Add a tile layer from OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            console.log('Tile layer added');
+
+            // Create a feature group to hold all markers and auto-fit map bounds
+            const markerGroup = L.featureGroup().addTo(map);
+            console.log('Feature group created');
+
+            // Define custom gold pin icon
+            const goldIcon = L.divIcon({
+                className: 'gold-pin-icon',
+                html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" style="filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));">
+                        <path fill="#FFD700" stroke="#228B22" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5" fill="#228B22"/>
+                       </svg>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 40],
+                popupAnchor: [0, -40]
+            });
+
+            // Fetch pin data from our API endpoint
+            const apiUrl = "{% url 'map_pins_api' %}";
+            console.log('API URL:', apiUrl);
+            
+            fetch(apiUrl)
+                .then(response => {
+                    console.log('API response status:', response.status);
+                    return response.json();
+                })
+                .then(pins => {
+                    console.log('✅ Fetched pins:', pins);
+                    console.log('Pins count:', Array.isArray(pins) ? pins.length : 'NOT AN ARRAY');
+
+                    if (!Array.isArray(pins) || pins.length === 0) {
+                        console.warn('⚠️ No pins returned from API or not an array');
+                        return;
+                    }
+
+                    pins.forEach((pin, index) => {
+                        console.log(`📍 Processing pin ${index}:`, pin);
+                        const lat = parseFloat(pin.latitude);
+                        const lng = parseFloat(pin.longitude);
+                        console.log(`   Coordinates: [${lat}, ${lng}]`);
+                        
+                        // Create a marker for each pin
+                        const marker = L.marker([lat, lng], {icon: goldIcon}).addTo(markerGroup);
+                        console.log(`   ✓ Marker created`);
+
+                        // build a recipes URL using the Django URL template for pin_recipes (0 replaced client-side)
+                        const recipesUrlTemplate = '{% url "pin_recipes" 0 %}';
+                        const recipesUrl = recipesUrlTemplate.replace('/0/', '/' + pin.id + '/');
+
+                        // Create the popup content with region and staple dish
+                        let popupContent = `<strong>${pin.name}</strong><br><em>${pin.pin_type}</em><br>${pin.description}`;
+
+                        if (pin.region) {
+                            popupContent += `<br><br><strong>🍳 Region: ${pin.region}</strong>`;
+                        }
+
+                        if (pin.staple_dish) {
+                            popupContent += `<br><span class="staple-dish-inline">Staple Dish: ${pin.staple_dish}</span>`;
+                        }
+
+                        // Add HTMX buttons: one loads into the sidepanel, the other into the modal
+                        popupContent += `<br><br><button hx-get="${recipesUrl}" hx-target="#recipes-sidepanel-content" hx-swap="innerHTML" class="open-recipes-btn">View Recipes (Panel)</button>`;
+                        popupContent += ` <button hx-get="${recipesUrl}" hx-target="#recipes-modal-content" hx-swap="innerHTML" class="open-recipes-modal-btn">View Recipes (Modal)</button>`;
+
+                        // Bind the popup to the marker
+                        marker.bindPopup(popupContent);
+
+                        // When popup opens, ask HTMX to process the popup element so hx- attributes are active
+                        marker.on('popupopen', function() {
+                            try {
+                                const popupEl = marker.getPopup().getElement();
+                                console.log('Popup opened, HTMX processing...');
+                                if (window.htmx) { htmx.process(popupEl); }
+                            } catch (e) {
+                                console.error('Error processing popup with HTMX:', e);
+                            }
+                        });
+
+                        // Add to sidebar list
+                        const sidebar = document.getElementById('destinations-list');
+                        if (sidebar) {
+                            const item = document.createElement('li');
+                            item.innerHTML = `<a href="#" data-marker="${pin.id}">${pin.name}</a> <span class="region-tag">${pin.region || 'N/A'}</span>`;
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                console.log('Sidebar item clicked for pin:', pin.id);
+                                marker.openPopup();
+                                map.setView(marker.getLatLng(), 13);
+                            });
+                            sidebar.appendChild(item);
+                        }
+                    });
+
+                    // Auto-fit map to all markers
+                    const layerCount = markerGroup.getLayers().length;
+                    console.log(`Total markers in group: ${layerCount}`);
+                    
+                    if (layerCount > 0) {
+                        try {
+                            const bounds = markerGroup.getBounds();
+                            console.log('Bounds:', bounds);
+                            map.fitBounds(bounds.pad(0.1));
+                            console.log('✅ Map bounds fitted to markers');
+                        } catch (e) {
+                            console.error('❌ Error fitting bounds:', e);
+                        }
+                    } else {
+                        console.warn('⚠️ No markers added to group, cannot fit bounds');
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Error fetching pins:', err);
+                    console.error('Stack trace:', err.stack);
+                });
+
+            console.log('🗺️ Map initialization complete - check console for markers and bounds logs');
+
+            // HTMX afterSwap handler: open modal when its content is swapped
+            document.body.addEventListener('htmx:afterSwap', function(evt) {
+                const target = evt.detail.target;
+                console.log('htmx:afterSwap fired for:', target.id);
+                if (target && target.id === 'recipes-modal-content') {
+                    const modal = document.getElementById('recipes-modal');
+                    modal.classList.add('open');
+                    modal.setAttribute('aria-hidden', 'false');
+                    console.log('📱 Modal opened via HTMX');
+                }
+            });
+
+            // Modal close button
+            document.addEventListener('click', function(e) {
+                if (e.target && e.target.id === 'recipes-modal-close') {
+                    const modal = document.getElementById('recipes-modal');
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden', 'true');
+                    console.log('🚫 Modal closed');
+                }
+            });
+        });
+    </script>
+    </div>
+{% endblock %}

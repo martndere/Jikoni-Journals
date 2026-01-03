@@ -1,0 +1,202 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jikoni Journals</title>
+    <!-- Local Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/two.js@0.8.12/build/two.min.js"></script>
+</head>
+<body>
+    <!-- Background Image Tag (Global) -->
+    <img id="hero-bg-img" class="hero-background-img" src="" data-src="{% static 'media/image/1.png' %}" alt="A fox in a field, representing wildlife and nature.">
+
+    <header>
+        <div id="logo-animation"></div>
+        <div id="pot-animation"></div>
+        
+        <div class="social-media-bar">
+            <a href="https://twitter.com" target="_blank" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://tiktok.com" target="_blank" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+            <a href="https://facebook.com" target="_blank" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://youtube.com" target="_blank" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+
+        <h1>Jikoni Journals</h1>
+        <h2>Welcome</h2>
+        <nav>
+            <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a>
+            <a href="{% url 'meal_plan_list' %}" {% if request.resolver_match.url_name == 'meal_plan_list' %}class="active"{% endif %}>Meal Plans</a>
+            <a href="{% url 'contact' %}" {% if request.resolver_match.url_name == 'contact' %}class="active"{% endif %}>Contact</a>
+            <a href="{% url 'map_view' %}" {% if request.resolver_match.url_name == 'map_view' %}class="active"{% endif %}>Destinations</a>
+            <a href="{% url 'booking_create' %}" {% if request.resolver_match.url_name == 'booking_create' %}class="active"{% endif %}>Book a Tour</a>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Admin Blog Post Notification (Toast) -->
+    <div id="blog-toast" class="toast hidden">
+        <div class="toast-header">
+            <strong>👨‍🍳 Fresh from the Kitchen</strong>
+            <button class="close-toast" onclick="document.getElementById('blog-toast').classList.add('hidden')">&times;</button>
+        </div>
+        <div class="toast-body">
+            <p>New Post: <em style="color: var(--primary-color);">"The Secret Spices of Zanzibar"</em></p>
+            <a href="#" class="toast-link">Read Recipe &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Background Music Player -->
+    <audio id="bg-music" src="{% static 'audio/elevator-music.mp3' %}" loop></audio>
+    <button id="music-toggle" style="position: fixed; bottom: 10px; right: 10px;">Mute</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Audio Control ---
+            const music = document.getElementById('bg-music');
+            const toggleBtn = document.getElementById('music-toggle');
+            let isPlaying = false;
+
+            // Autoplay requires user interaction first on most browsers
+            document.body.addEventListener('click', () => {
+                if (!isPlaying && music.src) {
+                    music.play().catch(e => console.log("Audio play failed:", e));
+                    isPlaying = true;
+                    toggleBtn.textContent = 'Mute';
+                }
+            }, { once: true });
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (music.paused) {
+                    music.play().catch(e => console.log("Audio play failed:", e));
+                    toggleBtn.textContent = 'Mute';
+                } else {
+                    music.pause();
+                    toggleBtn.textContent = 'Play Music';
+                }
+            });
+
+            // --- Hero Image Lazy Load ---
+            const imgEl = document.getElementById('hero-bg-img');
+            if (imgEl) {
+                const src = imgEl.getAttribute('data-src');
+                if (src) {
+                    const loader = new Image();
+                    loader.onload = function() {
+                        imgEl.src = src;
+                        requestAnimationFrame(() => imgEl.classList.add('loaded'));
+                    };
+                    loader.src = src;
+                }
+            }
+
+            // --- Logo Animation (Two.js) ---
+            const logoContainer = document.getElementById('logo-animation');
+            if (logoContainer) {
+                // Smaller size for the logo
+                const params = { width: 120, height: 120, type: Two.Types.svg };
+                const two = new Two(params).appendTo(logoContainer);
+
+                const silver = '#C0C0C0';
+                const group = two.makeGroup();
+
+                // 1. Plate
+                const plate = two.makeCircle(0, 0, 50);
+                plate.fill = 'rgba(255, 255, 255, 0.9)';
+                plate.stroke = silver;
+                plate.linewidth = 4;
+                group.add(plate);
+
+                const innerPlate = two.makeCircle(0, 0, 35);
+                innerPlate.noFill();
+                innerPlate.stroke = '#E0E0E0';
+                innerPlate.linewidth = 2;
+                group.add(innerPlate);
+
+                // 2. Fork & Knife (Simplified for logo)
+                const forkHandle = two.makeRectangle(-30, 25, 6, 40); forkHandle.fill = silver; forkHandle.noStroke();
+                const forkHead = two.makeRectangle(-30, -5, 12, 20); forkHead.fill = silver; forkHead.noStroke();
+                const knifeHandle = two.makeRectangle(30, 25, 6, 40); knifeHandle.fill = silver; knifeHandle.noStroke();
+                const knifeBlade = two.makePath(27, 5, 27, -35, 33, -35, 33, 5); knifeBlade.fill = silver; knifeBlade.noStroke();
+                group.add(forkHandle, forkHead, knifeHandle, knifeBlade);
+
+                // Scale down and animate
+                group.scale = 0.6;
+                group.translation.set(two.width / 2, -100);
+                group.rotation = Math.PI;
+
+                two.bind('update', function(frameCount) {
+                    const targetY = two.height / 2;
+                    if (Math.abs(targetY - group.translation.y) > 0.5) {
+                        group.translation.y += (targetY - group.translation.y) * 0.05;
+                        group.rotation += (0 - group.rotation) * 0.05;
+                    } else {
+                        group.rotation += 0.005;
+                    }
+                }).play();
+            }
+
+            // --- Cooking Pot Animation (Top Right) ---
+            const potContainer = document.getElementById('pot-animation');
+            if (potContainer) {
+                const params = { width: 120, height: 120, type: Two.Types.svg };
+                const twoPot = new Two(params).appendTo(potContainer);
+                const potGroup = twoPot.makeGroup();
+
+                // Pot Body
+                const potBody = twoPot.makePath(-25, -10, 25, -10, 20, 25, -20, 25);
+                potBody.fill = '#403d39'; // Dark iron color
+                potBody.stroke = '#FFD700'; // Gold rim
+                potBody.linewidth = 2;
+
+                // Pot Lid Handle
+                const lidHandle = twoPot.makeRectangle(0, -15, 10, 5);
+                lidHandle.fill = '#FFD700';
+
+                // Steam Bubbles
+                const steam1 = twoPot.makeCircle(-10, -25, 3); steam1.fill = 'rgba(255,255,255,0.6)'; steam1.noStroke();
+                const steam2 = twoPot.makeCircle(5, -35, 4); steam2.fill = 'rgba(255,255,255,0.6)'; steam2.noStroke();
+                const steam3 = twoPot.makeCircle(0, -20, 2); steam3.fill = 'rgba(255,255,255,0.6)'; steam3.noStroke();
+
+                potGroup.add(potBody, lidHandle, steam1, steam2, steam3);
+                potGroup.translation.set(twoPot.width / 2, twoPot.height / 2);
+                potGroup.scale = 1.2;
+
+                // Animate Steam
+                twoPot.bind('update', function(frameCount) {
+                    // Bobbing motion for the pot
+                    potGroup.translation.y = (twoPot.height / 2) + Math.sin(frameCount * 0.05) * 2;
+
+                    // Steam rising effect
+                    [steam1, steam2, steam3].forEach((s, i) => {
+                        s.translation.y -= 0.5 + (i * 0.1);
+                        s.opacity -= 0.01;
+                        if (s.opacity <= 0) {
+                            s.translation.y = -15; // Reset position
+                            s.opacity = 0.8;       // Reset opacity
+                        }
+                    });
+                }).play();
+            }
+
+            // --- Trigger Blog Toast ---
+            setTimeout(() => {
+                const toast = document.getElementById('blog-toast');
+                if(toast) toast.classList.remove('hidden');
+            }, 4000); // Show after 4 seconds
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
