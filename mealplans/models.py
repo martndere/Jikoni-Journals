@@ -10,12 +10,19 @@ class Week(models.Model):
         return f"Week {self.week_number}"
 
 class Recipe(models.Model):
+    CATEGORY_CHOICES = [
+        ('meal', 'Meal'),
+        ('drink', 'Drink'),
+        ('snack', 'Snack'),
+    ]
+    # Add this new field
     week = models.ForeignKey(Week, related_name='recipes', on_delete=models.CASCADE)
     day = models.PositiveIntegerField()
     title = models.CharField(max_length=255)
     notes = models.CharField(max_length=255, blank=True, null=True)
     ingredients = models.TextField(help_text="List each ingredient on a new line.")
     method = models.TextField(help_text="List each step on a new line.")
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='meal')
 
     class Meta:
         ordering = ['week__week_number', 'day']
