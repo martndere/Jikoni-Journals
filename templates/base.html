@@ -8,6 +8,8 @@
     <!-- Local Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {% block extra_css %}{% endblock %}
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍳</text></svg>">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
@@ -18,8 +20,15 @@
     <!-- Background Image Tag (Global) -->
     <img id="hero-bg-img" class="hero-background-img" src="" data-src="{% static 'media/image/1.png' %}" alt="A fox in a field, representing wildlife and nature.">
 
-    <header>
-        <div id="logo-animation"></div>
+    <header style="position: relative; overflow: hidden;">
+        <!-- Ambient Animations Containers -->
+        <div id="fish-animation" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;"></div>
+        <div id="egg-animation" style="position: absolute; top: 120px; left: 5%; width: 80px; height: 80px; pointer-events: none; z-index: 0;"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div id="logo-animation"></div>
+            <div id="clock-display" style="font-family: monospace; font-size: 1.1rem; font-weight: bold; color: #2E8B57; background-color: rgba(255, 255, 255, 0.9); padding: 2px 8px; border-radius: 4px; margin-top: -10px; margin-bottom: 5px; z-index: 10;"></div>
+        </div>
         <div id="pot-animation"></div>
         
         <div class="social-media-bar">
@@ -43,6 +52,18 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Footer -->
+    <footer style="background-color: #f4f4f4; color: #333; padding: 30px 20px; text-align: center; margin-top: auto; border-top: 1px solid #ddd;">
+        <div style="margin-bottom: 15px;">
+            <span style="font-family: 'Courier New', monospace; font-weight: bold; color: #2E8B57;">Jikoni Journals</span>
+        </div>
+        <p style="font-size: 0.9rem; margin: 5px 0;">&copy; {% now "Y" %} Jikoni Journals. All rights reserved.</p>
+        <p style="font-size: 0.8rem; color: #666;">Made with 🍳 and ❤️ in Nairobi.</p>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scroll-top-btn" title="Go to top" style="display: none; position: fixed; bottom: 80px; right: 20px; z-index: 99; border: none; outline: none; background-color: #2E8B57; color: white; cursor: pointer; padding: 12px 15px; border-radius: 50%; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); transition: background-color 0.3s;"><i class="fas fa-arrow-up"></i></button>
 
     <!-- Admin Blog Post Notification (Toast) -->
     <div id="blog-toast" class="toast hidden">
@@ -87,18 +108,32 @@
                 }
             });
 
-            // --- Hero Image Lazy Load ---
+            // --- Background Slideshow ---
             const imgEl = document.getElementById('hero-bg-img');
             if (imgEl) {
-                const src = imgEl.getAttribute('data-src');
-                if (src) {
-                    const loader = new Image();
-                    loader.onload = function() {
-                        imgEl.src = src;
-                        requestAnimationFrame(() => imgEl.classList.add('loaded'));
-                    };
-                    loader.src = src;
-                }
+                const bgImages = [
+                    "{% static 'media/image/1.png' %}",
+                    "{% static 'media/image/2.png' %}",
+                    "{% static 'media/image/3.png' %}",
+                    "{% static 'media/image/4.png' %}",
+                    "{% static 'media/image/5.png' %}",
+                    "{% static 'media/image/6.png' %}"
+                ];
+                let bgIndex = 0;
+
+                // Initial Load
+                imgEl.src = bgImages[0];
+                requestAnimationFrame(() => imgEl.classList.add('loaded'));
+
+                // Slideshow Loop
+                setInterval(() => {
+                    imgEl.classList.remove('loaded'); // Fade out
+                    setTimeout(() => {
+                        bgIndex = (bgIndex + 1) % bgImages.length;
+                        imgEl.src = bgImages[bgIndex];
+                        requestAnimationFrame(() => imgEl.classList.add('loaded')); // Fade in
+                    }, 600); // Match CSS transition duration
+                }, 5000); // Change every 5 seconds
             }
 
             // --- Logo Animation (Two.js) ---
@@ -136,13 +171,15 @@
                 group.translation.set(two.width / 2, -100);
                 group.rotation = Math.PI;
 
-                two.bind('update', function(frameCount) {
+                two.bind('update', function(frameCount, timeDelta) {
                     const targetY = two.height / 2;
                     if (Math.abs(targetY - group.translation.y) > 0.5) {
                         group.translation.y += (targetY - group.translation.y) * 0.05;
                         group.rotation += (0 - group.rotation) * 0.05;
                     } else {
-                        group.rotation += 0.005;
+                        // Rotate 1 full revolution (2 * PI) per 3 seconds (3000ms)
+                        const dt = timeDelta || 16; // Fallback to ~16ms if timeDelta is missing
+                        group.rotation = (group.rotation + (Math.PI * 2) * (dt / 3000));
                     }
                 }).play();
             }
@@ -190,11 +227,135 @@
                 }).play();
             }
 
+            // --- Fish Animation (Swimming across header) ---
+            const fishContainer = document.getElementById('fish-animation');
+            if (fishContainer) {
+                const twoFish = new Two({ width: fishContainer.offsetWidth, height: fishContainer.offsetHeight, type: Two.Types.svg }).appendTo(fishContainer);
+                
+                const fishGroup = twoFish.makeGroup();
+                
+                // Fish Body
+                const body = twoFish.makeEllipse(0, 0, 20, 12);
+                body.fill = '#FF7F50'; // Coral color
+                body.noStroke();
+                
+                // Fish Tail
+                const tail = twoFish.makePath(-15, 0, -25, -10, -25, 10);
+                tail.fill = '#FF7F50';
+                tail.noStroke();
+                
+                // Fish Eye
+                const eye = twoFish.makeCircle(8, -4, 2);
+                eye.fill = 'white';
+                const pupil = twoFish.makeCircle(9, -4, 1);
+                pupil.fill = 'black';
+
+                fishGroup.add(body, tail, eye, pupil);
+                fishGroup.translation.set(-50, 50); // Start off-screen left
+
+                // Fish Colors
+                const fishColors = ['#FF7F50', '#FFD700', '#20B2AA', '#FF69B4', '#87CEEB', '#9370DB'];
+
+                twoFish.bind('update', function(frameCount) {
+                    // Move right (Even Slower)
+                    fishGroup.translation.x += 0.4;
+                    
+                    // Bob up and down
+                    fishGroup.translation.y += Math.sin(frameCount * 0.05) * 0.5;
+                    
+                    // Wiggle rotation
+                    fishGroup.rotation = Math.sin(frameCount * 0.1) * 0.1;
+
+                    // Reset when off-screen right
+                    if (fishGroup.translation.x > twoFish.width + 50) {
+                        fishGroup.translation.x = -50;
+                        fishGroup.translation.y = Math.random() * (twoFish.height * 0.8) + 20;
+                        
+                        // Change Color
+                        const newColor = fishColors[Math.floor(Math.random() * fishColors.length)];
+                        body.fill = newColor;
+                        tail.fill = newColor;
+                    }
+                }).play();
+            }
+
+            // --- Egg Cracking Animation ---
+            const eggContainer = document.getElementById('egg-animation');
+            if (eggContainer) {
+                const twoEgg = new Two({ width: 80, height: 80, type: Two.Types.svg }).appendTo(eggContainer);
+                const eggGroup = twoEgg.makeGroup();
+                eggGroup.translation.set(40, 40);
+
+                const egg = twoEgg.makeEllipse(0, 0, 15, 20);
+                egg.fill = '#FFF';
+                egg.stroke = '#DDD';
+                egg.linewidth = 2;
+
+                const crack = twoEgg.makePath(-10, -8, -4, 2, 4, -2, 10, 8);
+                crack.noFill();
+                crack.stroke = '#333';
+                crack.linewidth = 1;
+                crack.linewidth = 2;
+                crack.cap = 'round';
+                crack.visible = false;
+
+                eggGroup.add(egg, crack);
+
+                // Egg Colors (White, Brown, Beige)
+                const eggColors = ['#FFF', '#F0EAD6', '#D2B48C', '#E6BC98'];
+
+                twoEgg.bind('update', function(frameCount) {
+                    // Simple loop: Wiggle -> Crack appears -> Pause -> Reset
+                    // Slower loop: 480 frames (~8s)
+                    const cycle = frameCount % 480; 
+                    
+                    if (cycle === 0) {
+                        egg.fill = eggColors[Math.floor(Math.random() * eggColors.length)];
+                        crack.visible = false;
+                        eggGroup.rotation = 0;
+                    }
+
+                    if (cycle < 420) { // Idle / Wiggle
+                        // Wiggle in the last 60 frames before cracking
+                        eggGroup.rotation = (cycle > 360) ? Math.sin(frameCount * 0.2) * 0.1 : 0;
+                        crack.visible = false;
+                    } else { // Cracked
+                        crack.visible = true;
+                        eggGroup.rotation = 0;
+                    }
+                }).play();
+            }
+
+            // --- 24hr Clock ---
+            function updateClock() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-GB', { hour12: false });
+                const clockEl = document.getElementById('clock-display');
+                if (clockEl) clockEl.textContent = timeString;
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+
             // --- Trigger Blog Toast ---
             setTimeout(() => {
                 const toast = document.getElementById('blog-toast');
                 if(toast) toast.classList.remove('hidden');
             }, 4000); // Show after 4 seconds
+
+            // --- Scroll to Top Button Logic ---
+            const scrollBtn = document.getElementById('scroll-top-btn');
+            window.onscroll = function() {
+                if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                    scrollBtn.style.display = "block";
+                } else {
+                    scrollBtn.style.display = "none";
+                }
+            };
+            
+            scrollBtn.addEventListener('click', function() {
+                document.body.scrollTop = 0; // For Safari
+                document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+            });
         });
     </script>
     {% block extra_scripts %}{% endblock %}

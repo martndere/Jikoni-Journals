@@ -1,0 +1,309 @@
+/* Meal Plan Page Styling */
+
+.meal-plan-hero {
+    position: fixed; /* Fixes it to the viewport */
+    top: 50%;        /* Vertically centered ("horizontally medium") */
+    left: -50px;     /* Push slightly off-screen ("leaving the page") */
+    transform: translateY(-50%);
+    z-index: 0;      /* Above background, but below content */
+    padding: 0;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.menu-frame {
+    width: 280px;
+    height: 380px;      /* Portrait rectangle like a menu */
+    background-color: #fffbf0; /* Warm paper-like background */
+    border: 6px double #2E8B57; /* Double border for menu look */
+    border-radius: 2px;
+    position: relative;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+    overflow: hidden;   /* Ensures ribbon stays within corners */
+}
+
+.menu-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Shrinks image to completely fit inside */
+    padding: 10px;       /* Adds breathing room so it's not touching edges */
+    box-sizing: border-box;
+    display: block;
+    opacity: 0.8;        /* Low transparency (mostly visible) */
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Ribbon Styling */
+.ribbon {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    z-index: 10;
+}
+
+.ribbon span {
+    position: absolute;
+    display: block;
+    width: 150px;
+    padding: 8px 0;
+    background-color: #d9534f; /* Ribbon Red */
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    color: #fff;
+    font-family: sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    right: -35px;
+    top: 25px;
+    transform: rotate(45deg);
+}
+
+.slideshow-btn {
+    margin-top: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #2E8B57;
+    color: #2E8B57;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.slideshow-btn:hover {
+    background: #2E8B57;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Ensure the text and table scroll OVER the fixed image */
+.meal-plan-container {
+    position: relative;
+    z-index: 2;
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Recipe Dropdown Styling */
+.recipe-trigger {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.recipe-trigger:hover {
+    background-color: rgba(46, 139, 87, 0.05);
+}
+
+.recipe-details-box {
+    padding: 20px;
+    text-align: left;
+}
+
+.recipe-details-box h4 {
+    color: #2E8B57;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+/* Paywall Styling */
+.paywall-container {
+    text-align: center;
+    padding: 30px 20px;
+    background-color: #fcfcfc;
+    border: 2px dashed #2E8B57;
+    border-radius: 8px;
+    margin: 10px;
+}
+
+.paywall-container h4 {
+    color: #2E8B57;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.paywall-icons {
+    margin: 20px 0;
+    font-size: 2rem;
+    color: #555;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.btn-upgrade {
+    background-color: #2E8B57;
+    color: white;
+    padding: 10px 25px;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: bold;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-upgrade:hover {
+    background-color: #246b42;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+/* --- Menu Selection Screen --- */
+.menu-selection-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.selection-title {
+    font-size: 3rem;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    margin-bottom: 50px;
+}
+
+.menu-options {
+    display: flex;
+    gap: 60px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.menu-option {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.menu-option:hover {
+    transform: translateY(-10px);
+}
+
+.menu-option h3 {
+    color: #fff;
+    margin-top: 20px;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+    font-size: 1.5rem;
+}
+
+/* --- 3D Book Animation --- */
+.book-wrapper {
+    width: 160px;
+    height: 220px;
+    perspective: 1000px;
+}
+
+.book {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.menu-option:hover .book {
+    transform: rotateY(-30deg);
+}
+
+.book-cover {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #2E8B57;
+    border-radius: 4px 8px 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+    z-index: 2;
+    backface-visibility: hidden; /* Hides back when rotated */
+    border: 2px solid rgba(255,255,255,0.2);
+}
+
+.book-cover span {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.book-page {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 95%;
+    height: 94%;
+    background-color: #fff;
+    border-radius: 2px 6px 6px 2px;
+    z-index: 1;
+    box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
+}
+
+/* --- Back Button --- */
+.back-to-menu-btn {
+    position: fixed;
+    top: 100px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: 1px solid white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.back-to-menu-btn:hover {
+    background: #2E8B57;
+}
+
+/* --- Section Themes --- */
+/* Drinks (Orange Theme) */
+.week-section.drinks-theme {
+    border-color: #D75F02;
+    box-shadow: 0 0 15px #D75F02, inset 0 0 20px rgba(215, 95, 2, 0.3);
+}
+
+.week-section.drinks-theme h3, 
+.week-section.drinks-theme thead tr th,
+.week-section.drinks-theme tbody tr td:first-child,
+.week-section.drinks-theme .chevron-icon {
+    color: #D75F02;
+}
+
+/* Snacks (Gold Theme) */
+.week-section.snacks-theme {
+    border-color: #FFD700;
+    box-shadow: 0 0 15px #FFD700, inset 0 0 20px rgba(255, 215, 0, 0.3);
+}
+/* Note: Snacks uses Gold which is similar to the default secondary-color, 
+   but we define the class for consistency if we want to tweak it later. */

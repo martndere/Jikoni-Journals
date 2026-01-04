@@ -1,18 +1,82 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block content %}
-    <div class="content-box">
-        <h2>Contact Us</h2>
-        <p>Have a question or feedback? Let us know!</p>
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/contact.css' %}">
+{% endblock %}
 
-        {# This div is the target for the HTMX form submission swap #}
-        <div id="form-container">
-            <form hx-post="{% url 'contact' %}" hx-target="#form-container" hx-swap="outerHTML">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" role="button">Send Message</button>
-            </form>
+{% block content %}
+<div class="contact-hero">
+    <h1>Get in Touch</h1>
+    <p>We'd love to hear from you regarding our culinary tours and meal plans.</p>
+</div>
+
+<div class="contact-layout">
+    <!-- Contact Form Section -->
+    <section class="contact-form-section">
+        <h2>Send us a Message</h2>
+        <form method="post" action=".">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required placeholder="Your Name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+            </div>
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="6" required placeholder="How can we help you?"></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Send Message</button>
+        </form>
+    </section>
+
+    <!-- About Us Section (New) -->
+    <section class="about-us-section">
+        <h2>About the Chef</h2>
+        <div class="admin-profile">
+            <div class="profile-image">
+                <!-- Using a placeholder image from your static files -->
+                <img src="{% static 'media/image/6.png' %}" alt="Admin Profile">
+            </div>
+            <div class="profile-bio">
+                <h3>Welcome to Jikoni Journals!</h3>
+                <p>
+                    Hi, I'm the creator behind Jikoni Journals. My passion for culinary tourism started years ago when I realized that the best way to understand a culture is through its food.
+                </p>
+                <p>
+                    From the spices of Zanzibar to the street food of Nairobi, I've curated these experiences to help you explore the world, one plate at a time.
+                </p>
+                <p>
+                    Feel free to reach out if you have questions about our tours or just want to swap recipes!
+                </p>
+            </div>
         </div>
-    </div>
+    </section>
+</div>
+
+<!-- Map Section -->
+<div class="map-section">
+    <h2>Visit Our Kitchen</h2>
+    <div id="contact-map"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Leaflet Map (Coordinates: Nairobi, Kenya)
+        var map = L.map('contact-map').setView([-1.2921, 36.8219], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.marker([-1.2921, 36.8219]).addTo(map)
+            .bindPopup('<b>Jikoni Journals HQ</b><br>Nairobi, Kenya')
+            .openPopup();
+    });
+</script>
 {% endblock %}

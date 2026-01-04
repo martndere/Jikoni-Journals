@@ -3,6 +3,25 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/logo_animation.css' %}">
+  <style>
+      /* Make splash overlay semi-transparent to show background slideshow */
+      #splash-overlay {
+          background-color: rgba(0, 0, 0, 0.85) !important;
+      }
+      
+      /* Hide main content while splash is active to avoid clutter */
+      body.splash-active header,
+      body.splash-active footer,
+      body.splash-active .hero-section {
+          opacity: 0;
+          transition: opacity 0.8s ease-in-out;
+      }
+
+      /* Glowing effect for headings */
+      .hero-sub-section h3 {
+          text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+      }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -25,14 +44,10 @@
         <p>An immersive guide to local culinary culture</p>
 
         <div class="hero-sub-section">
-          <h3>Explore Meal Plans</h3>
-          <p>Discover curated meal plans that take you on a journey through the world's kitchens.</p>
-          <a href="{% url 'meal_plan_list' %}" role="button">View Plans</a>
-        </div>
-
-          <div class="jj-logo-container">
-    <div class="jj-logo-text jj-jikoni">Jikoni</div>
-    <div class="jj-logo-text jj-journals">Journals</div>
+          <h3>Welcome to Jikoni Journals!</h3>
+          <p>Hi, I'm the creator behind Jikoni Journals. My passion for culinary tourism started years ago when I realized that the best way to understand a culture is through its food.</p>
+          <p>From the spices of Zanzibar to the street food of Nairobi, I've curated these experiences to help you explore the world, one plate at a time.</p>
+          <p>Feel free to reach out if you have questions about our tours or just want to swap recipes!</p>
         </div>
     
         <div class="hero-sub-section">
@@ -47,6 +62,11 @@
 
 {% block extra_scripts %}
 <script>
+    // Initialize splash state
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('splash-active');
+    });
+
     function enterSite() {
         // Play welcome sound
         const audio = document.getElementById('welcome-sound');
@@ -54,6 +74,7 @@
             audio.play().catch(e => console.log("Audio play failed:", e));
         }
         document.getElementById('splash-overlay').classList.add('splash-hidden');
+        document.body.classList.remove('splash-active');
     }
 </script>
 {% endblock %}

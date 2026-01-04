@@ -1,16 +1,88 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/meal_plan.css' %}">
+{% endblock %}
+
 {% block content %}
 <!-- Video Background Overlay -->
 <video class="hero-background-video" autoplay muted loop playsinline>
     <source src="{% static 'media/video/1.mp4' %}" type="video/mp4">
 </video>
 
+<!-- MENU SELECTION SCREEN -->
+<div id="menu-selection-screen" class="menu-selection-container">
+    <h1 class="selection-title">Select a Menu</h1>
+    <div class="menu-options">
+        <!-- Meals Option -->
+        <div class="menu-option" onclick="showSection('meals')">
+            <div class="book-wrapper">
+                <div class="book">
+                    <div class="book-cover" style="background-color: #2E8B57;">
+                        <i class="fas fa-utensils"></i>
+                        <span>Meals</span>
+                    </div>
+                    <div class="book-spine"></div>
+                    <div class="book-page"></div>
+                </div>
+            </div>
+            <h3>Culinary Meals</h3>
+        </div>
+
+        <!-- Drinks Option -->
+        <div class="menu-option" onclick="showSection('drinks')">
+            <div class="book-wrapper">
+                <div class="book">
+                    <div class="book-cover" style="background-color: #D75F02;">
+                        <i class="fas fa-cocktail"></i>
+                        <span>Drinks</span>
+                    </div>
+                    <div class="book-spine"></div>
+                    <div class="book-page"></div>
+                </div>
+            </div>
+            <h3>Cocktails & Drinks</h3>
+        </div>
+
+        <!-- Snacks Option -->
+        <div class="menu-option" onclick="showSection('snacks')">
+            <div class="book-wrapper">
+                <div class="book">
+                    <div class="book-cover" style="background-color: #FFD700; color: #333;">
+                        <i class="fas fa-cookie-bite"></i>
+                        <span>Snacks</span>
+                    </div>
+                    <div class="book-spine"></div>
+                    <div class="book-page"></div>
+                </div>
+            </div>
+            <h3>Snacks & Pastries</h3>
+        </div>
+    </div>
+</div>
+
+<!-- MEALS CONTENT (Initially Hidden) -->
+<div id="meals-view" class="content-view" style="display: none;">
+    <button class="back-to-menu-btn" onclick="showSection('selection')">
+        <i class="fas fa-arrow-left"></i> Back to Menus
+    </button>
+
+<!-- Featured Ellipse Image (Moved outside container to ensure visibility) -->
+<div class="meal-plan-hero">
+    <div class="menu-frame">
+        <div class="ribbon"><span>Featured</span></div>
+        <img id="ellipse-image" src="{% static 'media/image/2.png' %}" alt="Featured Meal Plan">
+    </div>
+    <button id="slideshow-toggle" class="slideshow-btn" title="Pause Slideshow">
+        <i class="fas fa-pause"></i>
+    </button>
+</div>
+
 <div class="meal-plan-container">
     <h2>30-Day Dinner Meal Plan</h2>
     <p>Curated weekly menus inspired by global cuisines.</p>
-    
+
     <!-- Explainer Popup/Toggle -->
     <div class="meal-plan-explainer">
         <button type="button" role="button" class="secondary" onclick="toggleExplainer()">
@@ -45,9 +117,6 @@
             <tbody>
                 {% for recipe in week.recipes.all %}
                 <tr class="recipe-trigger"
-                    hx-get="{% url 'recipe_detail' recipe.id %}" 
-                    hx-target="#recipe-content-{{ recipe.id }}" 
-                    hx-swap="innerHTML"
                     onclick="toggleRecipeRow('{{ recipe.id }}')">
                     <td>Day {{ recipe.day }}</td>
                     <td>{{ recipe.title }}</td>
@@ -64,7 +133,30 @@
                                 <button onclick="toggleRecipeRow('{{ recipe.id }}')" class="action-btn" title="Close">✖</button>
                             </div>
                             <div id="recipe-content-{{ recipe.id }}">
-                                <div style="padding: 1rem; text-align: center; color: #666;">Loading recipe details...</div>
+                                {% if recipe.day == 1 or user.is_authenticated and user.is_premium %}
+                                <div class="recipe-details-box">
+                                    {% if recipe.description %}
+                                    <h4>Description:</h4>
+                                    {{ recipe.description|linebreaks }}
+                                    {% endif %}
+                                    <h4>Ingredients:</h4>
+                                    {{ recipe.ingredients|linebreaks|default:"No ingredients listed." }}
+                                    <h4>Method:</h4>
+                                    {{ recipe.method|linebreaks|default:"No preparation steps listed." }}
+                                </div>
+                                {% else %}
+                                <!-- Paywall for Day 2+ -->
+                                <div class="paywall-container">
+                                    <h4>🔒 Premium Recipe</h4>
+                                    <p>Unlock the full weekly meal plan to view this recipe.</p>
+                                    <div class="paywall-icons">
+                                        <i class="fas fa-mobile-screen-button" title="M-Pesa"></i>
+                                        <i class="fab fa-cc-visa" title="Visa"></i>
+                                        <i class="fab fa-paypal" title="PayPal"></i>
+                                    </div>
+                                    <a href="#" class="btn-upgrade">Subscribe Now</a>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </td>
@@ -75,6 +167,128 @@
     </section>
     {% endfor %}
     </div> {# .meal-content #}
+</div>
+</div> <!-- End #meals-view -->
+
+<!-- DRINKS CONTENT -->
+<div id="drinks-view" class="content-view" style="display: none;">
+    <button class="back-to-menu-btn" onclick="showSection('selection')"><i class="fas fa-arrow-left"></i> Back to Menus</button>
+    <div class="meal-plan-container">
+        <h2 style="color: #D75F02;">Cocktails & Drinks Menu</h2>
+        
+        <div class="meal-content">
+            <section class="week-section drinks-theme">
+                <h3>Signature Beverages</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Notes</th>
+                            <th style="width: 30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recipe in drinks %}
+                        <tr class="recipe-trigger" onclick="toggleRecipeRow('{{ recipe.id }}')">
+                            <td><i class="fas fa-glass-martini-alt"></i></td>
+                            <td>{{ recipe.title }}</td>
+                            <td>{{ recipe.notes|default_if_none:"—" }}</td>
+                            <td style="text-align: center;">
+                                <span id="chevron-{{ recipe.id }}" class="chevron-icon">▼</span>
+                            </td>
+                        </tr>
+                        <tr id="recipe-row-{{ recipe.id }}" class="recipe-detail-row" style="display: none;">
+                            <td colspan="4" style="padding: 0; border: none;">
+                                <div class="recipe-dropdown-content" style="position: relative;">
+                                    <div style="position: absolute; top: 10px; right: 15px;">
+                                        <button onclick="printRecipe('recipe-content-{{ recipe.id }}')" class="action-btn" title="Print Recipe">🖨️</button>
+                                        <button onclick="toggleRecipeRow('{{ recipe.id }}')" class="action-btn" title="Close">✖</button>
+                                    </div>
+                                    <div id="recipe-content-{{ recipe.id }}">
+                                        <div class="recipe-details-box">
+                                            {% if recipe.description %}
+                                            <h4>Description:</h4>
+                                            {{ recipe.description|linebreaks }}
+                                            {% endif %}
+                                            <h4>Ingredients:</h4>
+                                            {{ recipe.ingredients|linebreaks|default:"No ingredients listed." }}
+                                            <h4>Method:</h4>
+                                            {{ recipe.method|linebreaks|default:"No preparation steps listed." }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" style="text-align:center; padding: 20px; color: white;">No drinks available yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- SNACKS CONTENT -->
+<div id="snacks-view" class="content-view" style="display: none;">
+    <button class="back-to-menu-btn" onclick="showSection('selection')"><i class="fas fa-arrow-left"></i> Back to Menus</button>
+    <div class="meal-plan-container">
+        <h2 style="color: #FFD700;">Snacks & Pastries Menu</h2>
+        
+        <div class="meal-content">
+            <section class="week-section snacks-theme">
+                <h3>Sweet & Savory Treats</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Notes</th>
+                            <th style="width: 30px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for recipe in snacks %}
+                        <tr class="recipe-trigger" onclick="toggleRecipeRow('{{ recipe.id }}')">
+                            <td><i class="fas fa-cookie"></i></td>
+                            <td>{{ recipe.title }}</td>
+                            <td>{{ recipe.notes|default_if_none:"—" }}</td>
+                            <td style="text-align: center;">
+                                <span id="chevron-{{ recipe.id }}" class="chevron-icon">▼</span>
+                            </td>
+                        </tr>
+                        <!-- Reusing the same row logic as above. In a real app, consider a reusable snippet/include -->
+                        <tr id="recipe-row-{{ recipe.id }}" class="recipe-detail-row" style="display: none;">
+                            <td colspan="4" style="padding: 0; border: none;">
+                                <div class="recipe-dropdown-content" style="position: relative;">
+                                    <div style="position: absolute; top: 10px; right: 15px;">
+                                        <button onclick="printRecipe('recipe-content-{{ recipe.id }}')" class="action-btn" title="Print Recipe">🖨️</button>
+                                        <button onclick="toggleRecipeRow('{{ recipe.id }}')" class="action-btn" title="Close">✖</button>
+                                    </div>
+                                    <div id="recipe-content-{{ recipe.id }}">
+                                        <div class="recipe-details-box">
+                                            {% if recipe.description %}
+                                            <h4>Description:</h4>
+                                            {{ recipe.description|linebreaks }}
+                                            {% endif %}
+                                            <h4>Ingredients:</h4>
+                                            {{ recipe.ingredients|linebreaks|default:"No ingredients listed." }}
+                                            <h4>Method:</h4>
+                                            {{ recipe.method|linebreaks|default:"No preparation steps listed." }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" style="text-align:center; padding: 20px; color: white;">No snacks available yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -114,5 +328,71 @@
         printWindow.document.close();
         printWindow.print();
     }
+
+    function showSection(sectionId) {
+        // Hide all views
+        document.getElementById('menu-selection-screen').style.display = 'none';
+        document.getElementById('meals-view').style.display = 'none';
+        document.getElementById('drinks-view').style.display = 'none';
+        document.getElementById('snacks-view').style.display = 'none';
+
+        if (sectionId === 'selection') {
+            document.getElementById('menu-selection-screen').style.display = 'flex';
+        } else {
+            document.getElementById(sectionId + '-view').style.display = 'block';
+        }
+    }
+
+    // --- Ellipse Slideshow ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const images = [
+            "{% static 'media/image/2.png' %}",
+            "{% static 'media/image/1.png' %}",
+            "{% static 'media/image/3.png' %}",
+            "{% static 'media/image/4.png' %}",
+            "{% static 'media/image/5.png' %}"
+        ];
+        let idx = 0;
+        const img = document.getElementById('ellipse-image');
+        const toggleBtn = document.getElementById('slideshow-toggle');
+        let intervalId = null;
+        let isPlaying = true;
+
+        function startSlideshow() {
+            if (intervalId) return;
+            intervalId = setInterval(() => {
+                idx = (idx + 1) % images.length;
+                img.style.opacity = '0'; // Fade out
+                setTimeout(() => {
+                    img.src = images[idx];
+                    img.style.opacity = '0.8'; // Fade in (matches CSS)
+                }, 500);
+            }, 3000); // Rotate every 3 seconds
+        }
+
+        function stopSlideshow() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+            }
+        }
+
+        if (img && toggleBtn) {
+            startSlideshow(); // Start automatically
+
+            toggleBtn.addEventListener('click', function() {
+                if (isPlaying) {
+                    stopSlideshow();
+                    toggleBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    toggleBtn.title = "Play Slideshow";
+                } else {
+                    startSlideshow();
+                    toggleBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    toggleBtn.title = "Pause Slideshow";
+                }
+                isPlaying = !isPlaying;
+            });
+        }
+    });
 </script>
 {% endblock %}
